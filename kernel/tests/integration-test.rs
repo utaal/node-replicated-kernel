@@ -1093,9 +1093,10 @@ fn s03_vmxnet3_smoke() {
     check_for_successful_exit(&cmdline, qemu_run(), output);
 }
 
-/// Tests that the basic vmxnet3 driver in the kernel is functional.
+/// Run the controller TCP RPC server
 #[cfg(not(feature = "baremetal"))]
 #[test]
+#[ignore = "still under development"]
 fn s03_controller() {
     let cmdline = RunnerArgs::new("test-controller")
         .timeout(25_000)

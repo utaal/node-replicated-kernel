@@ -93,7 +93,12 @@ impl ClusterClientAPI for TCPClient<'_> {
 /// RPC client operations
 impl RPCClientAPI for TCPClient<'_> {
     /// calls a remote RPC function with ID
-    fn rpc_call(&mut self, pid: u64, rpc_id: RPCType, data: Vec<u8>) -> Result<Vec<u8>, RPCError> {
+    fn rpc_call(
+        &mut self,
+        pid: usize,
+        rpc_id: RPCType,
+        data: Vec<u8>,
+    ) -> Result<Vec<u8>, RPCError> {
         // Create request header
         let req_hdr = RPCHeader {
             client_id: self.client_id,
@@ -199,19 +204,25 @@ impl RPCClientAPI for TCPClient<'_> {
 }
 
 impl TCPClient<'_> {
-    pub fn fio_write(&mut self, pid: u64, fd: u64, data: Vec<u8>) -> Result<(u64, u64), RPCError> {
+    pub fn fio_write(
+        &mut self,
+        pid: usize,
+        fd: u64,
+        data: Vec<u8>,
+    ) -> Result<(u64, u64), RPCError> {
         self.fio_writeat(pid, fd, 0, data)
     }
 
     pub fn fio_writeat(
         &mut self,
-        pid: u64,
+        pid: usize,
         fd: u64,
         offset: i64,
         data: Vec<u8>,
     ) -> Result<(u64, u64), RPCError> {
-        let req = RPCWriteReq {
+        let req = RPCRWReq {
             fd: fd,
+            len: data.len() as u64,
             offset: offset,
         };
         let mut req_data = Vec::new();
@@ -232,7 +243,7 @@ impl TCPClient<'_> {
 
     pub fn fio_read(
         &mut self,
-        pid: u64,
+        pid: usize,
         fd: u64,
         len: u64,
         buff_ptr: &mut [u8],
@@ -242,13 +253,13 @@ impl TCPClient<'_> {
 
     pub fn fio_readat(
         &mut self,
-        pid: u64,
+        pid: usize,
         fd: u64,
         len: u64,
         offset: i64,
         buff_ptr: &mut [u8],
     ) -> Result<(u64, u64), RPCError> {
-        let req = RPCReadReq {
+        let req = RPCRWReq {
             fd: fd,
             len: len,
             offset: offset,
@@ -285,7 +296,7 @@ impl TCPClient<'_> {
 
     pub fn fio_create(
         &mut self,
-        pid: u64,
+        pid: usize,
         pathname: &[u8],
         flags: u64,
         modes: u64,
@@ -295,7 +306,7 @@ impl TCPClient<'_> {
 
     pub fn fio_open(
         &mut self,
-        pid: u64,
+        pid: usize,
         pathname: &[u8],
         flags: u64,
         modes: u64,
@@ -305,7 +316,7 @@ impl TCPClient<'_> {
 
     fn fio_open_create(
         &mut self,
-        pid: u64,
+        pid: usize,
         pathname: &[u8],
         flags: u64,
         modes: u64,
@@ -330,7 +341,7 @@ impl TCPClient<'_> {
         }
     }
 
-    pub fn fio_close(&mut self, pid: u64, fd: u64) -> Result<(u64, u64), RPCError> {
+    pub fn fio_close(&mut self, pid: usize, fd: u64) -> Result<(u64, u64), RPCError> {
         let req = RPCCloseReq { fd: fd };
         let mut req_data = Vec::new();
         unsafe { encode(&req, &mut req_data) }.unwrap();
@@ -347,7 +358,7 @@ impl TCPClient<'_> {
         }
     }
 
-    pub fn fio_delete(&mut self, pid: u64, pathname: &[u8]) -> Result<(u64, u64), RPCError> {
+    pub fn fio_delete(&mut self, pid: usize, pathname: &[u8]) -> Result<(u64, u64), RPCError> {
         let req = RPCDeleteReq {
             pathname: pathname.to_vec(),
         };
@@ -367,7 +378,7 @@ impl TCPClient<'_> {
 
     pub fn fio_rename(
         &mut self,
-        pid: u64,
+        pid: usize,
         oldname: &[u8],
         newname: &[u8],
     ) -> Result<(u64, u64), RPCError> {
@@ -391,7 +402,7 @@ impl TCPClient<'_> {
 
     pub fn fio_mkdir(
         &mut self,
-        pid: u64,
+        pid: usize,
         pathname: &[u8],
         modes: u64,
     ) -> Result<(u64, u64), RPCError> {
@@ -413,7 +424,7 @@ impl TCPClient<'_> {
         }
     }
 
-    pub fn fio_getinfo(&mut self, pid: u64, name: &[u8]) -> Result<(u64, u64), RPCError> {
+    pub fn fio_getinfo(&mut self, pid: usize, name: &[u8]) -> Result<(u64, u64), RPCError> {
         let req = RPCGetInfoReq {
             name: name.to_vec(),
         };

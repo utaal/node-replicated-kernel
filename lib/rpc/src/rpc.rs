@@ -8,6 +8,7 @@ pub enum RPCError {
     ExtraData,
     TransportError,
     MalformedResponse,
+    MalformedRequest,
     InternalError,
 
     // File IO
@@ -100,7 +101,7 @@ unsafe_abomonate!(RPCType);
 #[derive(Debug)]
 pub struct RPCHeader {
     pub client_id: u64,
-    pub pid: u64,
+    pub pid: usize,
     pub req_id: u64,
     pub msg_type: RPCType,
     pub msg_len: u64,
@@ -136,19 +137,12 @@ pub struct RPCRenameReq {
 unsafe_abomonate!(RPCRenameReq: oldname, newname);
 
 #[derive(Debug)]
-pub struct RPCReadReq {
+pub struct RPCRWReq {
     pub fd: u64,
     pub len: u64,
     pub offset: i64,
 }
-unsafe_abomonate!(RPCReadReq: fd, len, offset);
-
-#[derive(Debug)]
-pub struct RPCWriteReq {
-    pub fd: u64,
-    pub offset: i64,
-}
-unsafe_abomonate!(RPCWriteReq: fd, offset);
+unsafe_abomonate!(RPCRWReq: fd, len, offset);
 
 #[derive(Debug)]
 pub struct RPCMkDirReq {
