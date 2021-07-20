@@ -420,7 +420,8 @@ impl TCPClient<'_> {
         let mut req_data = Vec::new();
         unsafe { encode(&req, &mut req_data) }.unwrap();
         let mut res = self.rpc_call(pid, RPCType::GetInfo, req_data).unwrap();
-        if let Some((res, mut data)) = unsafe { decode::<FIORPCRes>(&mut res) } {
+        if let Some((_res, mut data)) = unsafe { decode::<FIORPCRes>(&mut res) } {
+            // TODO: check parsed res
             if let Some((file_info, remaining)) = unsafe { decode::<FileInfo>(&mut data) } {
                 if remaining.len() != 0 {
                     return Err(RPCError::ExtraData);

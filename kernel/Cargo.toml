@@ -33,6 +33,7 @@ rawtime = "0.0.4"
 libacpica = "0.0.6"
 atopology = "0.0.17"
 # External libraries we use:
+abomonation = { git="https://github.com/hunhoffe/abomonation.git", branch="no_std" }
 log = "0.4"
 lazy_static = { version = "1.4", features = ["spin_no_std"] }
 logos = { version = "0.12", default-features = false, features = ["export_derive"] }
@@ -135,3 +136,5 @@ test-replica-advance = ["integration-test"]
 test-vmxnet-smoke = ["integration-test"]
 # test-vmxnet-smoltcp: Test vmxnet NIC driver with a network stack
 test-vmxnet-smoltcp = ["integration-test"]
+# test-controller: Test RPC-based controller
+test-controller = ["integration-test"]
