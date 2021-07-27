@@ -23,6 +23,7 @@ libm = "0.2.1"
 lazy_static =  { version = "1.4", default_features = false }
 cstr_core = { version = "0.2.3", default-features = false }
 spin = { version = "0.5.2", default_features = false }
+hashbrown = { version = "0.11", features = [ "nightly" ] }
 
 [features]
 default = []
