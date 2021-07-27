@@ -42,10 +42,10 @@ use log::{debug, error, info, Level, Metadata, Record, SetLoggerError};
 mod vmops;
 
 mod f64;
+mod fsproptest;
 #[cfg(feature = "fxmark")]
 mod fxmark;
 mod histogram;
-mod fsproptest;
 
 #[thread_local]
 pub static mut TLS_TEST: [&str; 2] = ["abcd", "efgh"];
