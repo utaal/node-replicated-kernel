@@ -381,12 +381,11 @@ fn handle_fileio(
             {
                 let filename = userptr_to_str(pathname)?;
                 let mut client = kcb.arch.rpc_client.lock();
-                return match client.as_mut().unwrap().fio_open(
-                    pid,
-                    filename,
-                    flags,
-                    modes,
-                ) {
+                return match client
+                    .as_mut()
+                    .unwrap()
+                    .fio_open(pid, filename, flags, modes)
+                {
                     Ok(a) => Ok(a),
                     Err(err) => Err(err.into()),
                 };
@@ -512,11 +511,7 @@ fn handle_fileio(
 
                 let filename = userptr_to_str(name)?;
                 let mut client = kcb.arch.rpc_client.lock();
-                return match client
-                    .as_mut()
-                    .unwrap()
-                    .fio_getinfo(pid, filename)
-                {
+                return match client.as_mut().unwrap().fio_getinfo(pid, filename) {
                     Ok((ftype, fsize)) => {
                         let user_ptr = UserPtr::new(&mut VAddr::from(info_ptr));
                         unsafe {
@@ -542,11 +537,7 @@ fn handle_fileio(
             {
                 let filename = userptr_to_str(name)?;
                 let mut client = kcb.arch.rpc_client.lock();
-                return match client
-                    .as_mut()
-                    .unwrap()
-                    .fio_delete(pid, filename)
-                {
+                return match client.as_mut().unwrap().fio_delete(pid, filename) {
                     Ok(a) => Ok(a),
                     Err(err) => Err(err.into()),
                 };
@@ -592,11 +583,7 @@ fn handle_fileio(
                 let oldname = userptr_to_str(oldname)?;
                 let newname = userptr_to_str(newname)?;
                 let mut client = kcb.arch.rpc_client.lock();
-                return match client.as_mut().unwrap().fio_rename(
-                    pid,
-                    oldname,
-                    newname,
-                ) {
+                return match client.as_mut().unwrap().fio_rename(pid, oldname, newname) {
                     Ok(a) => Ok(a),
                     Err(err) => Err(err.into()),
                 };
@@ -617,11 +604,7 @@ fn handle_fileio(
                 // TODO
                 let pathname = userptr_to_str(pathname)?;
                 let mut client = kcb.arch.rpc_client.lock();
-                return match client
-                    .as_mut()
-                    .unwrap()
-                    .fio_mkdir(pid, pathname, modes)
-                {
+                return match client.as_mut().unwrap().fio_mkdir(pid, pathname, modes) {
                     Ok(a) => Ok(a),
                     Err(err) => Err(err.into()),
                 };

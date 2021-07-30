@@ -360,9 +360,7 @@ impl TCPClient<'_> {
     }
 
     pub fn fio_delete(&mut self, pid: usize, pathname: String) -> Result<(u64, u64), RPCError> {
-        let req = RPCDeleteReq {
-            pathname: pathname,
-        };
+        let req = RPCDeleteReq { pathname: pathname };
         let mut req_data = Vec::new();
         unsafe { encode(&req, &mut req_data) }.unwrap();
         let mut res = self.rpc_call(pid, RPCType::Delete, req_data).unwrap();
@@ -426,9 +424,7 @@ impl TCPClient<'_> {
     }
 
     pub fn fio_getinfo(&mut self, pid: usize, name: String) -> Result<(u64, u64), RPCError> {
-        let req = RPCGetInfoReq {
-            name: name,
-        };
+        let req = RPCGetInfoReq { name: name };
         let mut req_data = Vec::new();
         unsafe { encode(&req, &mut req_data) }.unwrap();
         let mut res = self.rpc_call(pid, RPCType::GetInfo, req_data).unwrap();
