@@ -2,7 +2,7 @@ use abomonation::{decode, encode};
 use alloc::borrow::ToOwned;
 use alloc::string::String;
 use alloc::{vec, vec::Vec};
-use log::{debug, warn};
+use log::{debug, trace, warn};
 
 use smoltcp::iface::EthernetInterface;
 use smoltcp::socket::{SocketHandle, SocketSet, TcpSocket, TcpSocketBuffer};
@@ -167,7 +167,7 @@ impl RPCClientAPI for TCPClient<'_> {
             let mut socket = self.sockets.get::<TcpSocket>(self.server_handle.unwrap());
             if socket.can_send() && !data_sent {
                 socket.send_slice(&data[..]).unwrap();
-                debug!("Client sent: {:?}", data);
+                trace!("Client sent: {:?}", data);
                 data_sent = true;
             } else if data_sent {
                 return Ok(());
@@ -196,7 +196,7 @@ impl RPCClientAPI for TCPClient<'_> {
                     })
                     .unwrap();
                 if data.len() > 0 {
-                    debug!("Client recv: {:?}", data);
+                    trace!("Client recv: {:?}", data);
                     return Ok(data);
                 }
             }
@@ -428,19 +428,11 @@ impl TCPClient<'_> {
         let mut req_data = Vec::new();
         unsafe { encode(&req, &mut req_data) }.unwrap();
         let mut res = self.rpc_call(pid, RPCType::GetInfo, req_data).unwrap();
-        if let Some((res, mut data)) = unsafe { decode::<FIORPCRes>(&mut res) } {
-            if !res.ret.is_ok() {
-                return res.ret;
+        if let Some((res, remaining)) = unsafe { decode::<FIORPCRes>(&mut res) } {
+            if remaining.len() > 0 {
+                return Err(RPCError::ExtraData);
             }
-            if let Some((file_info, remaining)) = unsafe { decode::<FileInfo>(&mut data) } {
-                if remaining.len() != 0 {
-                    return Err(RPCError::ExtraData);
-                }
-                debug!("FileInfo() {:?}", file_info);
-                return Ok((file_info.ftype, file_info.fsize));
-            } else {
-                return Err(RPCError::MalformedResponse);
-            }
+            return res.ret;
         } else {
             return Err(RPCError::MalformedResponse);
         }
