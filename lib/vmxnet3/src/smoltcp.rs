@@ -32,7 +32,7 @@ impl DevQueuePhy {
         // Front-load an rx descriptor. This is necessary due to a bug in smoltcp
         // that requries there be at least one rx descriptor before data can be received.
         let mut chain = IOBufChain::new(0, 2).expect("Can't make IoBufChain?");
-        let layout = Layout::from_size_align(256, 128).expect("Correct Layout");
+        let layout = Layout::from_size_align(MAX_PACKET_SZ, 128).expect("Correct Layout");
 
         let mut seg0 = IOBuf::new(layout).expect("Can't make packet?");
         seg0.expand();
