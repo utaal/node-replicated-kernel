@@ -383,7 +383,7 @@ fn handle_fileio(
                 let mut client = kcb.arch.rpc_client.lock();
                 return match client.as_mut().unwrap().fio_open(
                     pid,
-                    filename.as_bytes(),
+                    filename,
                     flags,
                     modes,
                 ) {
@@ -545,7 +545,7 @@ fn handle_fileio(
                 return match client
                     .as_mut()
                     .unwrap()
-                    .fio_delete(pid, filename.as_bytes())
+                    .fio_delete(pid, filename)
                 {
                     Ok(a) => Ok(a),
                     Err(err) => Err(err.into()),
@@ -594,8 +594,8 @@ fn handle_fileio(
                 let mut client = kcb.arch.rpc_client.lock();
                 return match client.as_mut().unwrap().fio_rename(
                     pid,
-                    oldname.as_bytes(),
-                    newname.as_bytes(),
+                    oldname,
+                    newname,
                 ) {
                     Ok(a) => Ok(a),
                     Err(err) => Err(err.into()),
@@ -620,7 +620,7 @@ fn handle_fileio(
                 return match client
                     .as_mut()
                     .unwrap()
-                    .fio_mkdir(pid, pathname.as_bytes(), modes)
+                    .fio_mkdir(pid, pathname, modes)
                 {
                     Ok(a) => Ok(a),
                     Err(err) => Err(err.into()),

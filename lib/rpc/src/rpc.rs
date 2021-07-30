@@ -112,7 +112,7 @@ unsafe_abomonate!(RPCHeader: client_id, pid, req_id, msg_type, msg_len);
 //////// FILEIO Operations
 #[derive(Debug)]
 pub struct RPCOpenReq {
-    pub pathname: Vec<u8>,
+    pub pathname: String,
     pub flags: u64,
     pub modes: u64,
 }
@@ -126,14 +126,14 @@ unsafe_abomonate!(RPCCloseReq: fd);
 
 #[derive(Debug)]
 pub struct RPCDeleteReq {
-    pub pathname: Vec<u8>,
+    pub pathname: String,
 }
 unsafe_abomonate!(RPCDeleteReq: pathname);
 
 #[derive(Debug)]
 pub struct RPCRenameReq {
-    pub oldname: Vec<u8>,
-    pub newname: Vec<u8>,
+    pub oldname: String,
+    pub newname: String,
 }
 unsafe_abomonate!(RPCRenameReq: oldname, newname);
 
@@ -147,7 +147,7 @@ unsafe_abomonate!(RPCRWReq: fd, len, offset);
 
 #[derive(Debug)]
 pub struct RPCMkDirReq {
-    pub pathname: Vec<u8>,
+    pub pathname: String,
     pub modes: u64,
 }
 unsafe_abomonate!(RPCMkDirReq: pathname, modes);

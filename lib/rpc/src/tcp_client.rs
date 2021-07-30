@@ -298,7 +298,7 @@ impl TCPClient<'_> {
     pub fn fio_create(
         &mut self,
         pid: usize,
-        pathname: &[u8],
+        pathname: String,
         flags: u64,
         modes: u64,
     ) -> Result<(u64, u64), RPCError> {
@@ -308,7 +308,7 @@ impl TCPClient<'_> {
     pub fn fio_open(
         &mut self,
         pid: usize,
-        pathname: &[u8],
+        pathname: String,
         flags: u64,
         modes: u64,
     ) -> Result<(u64, u64), RPCError> {
@@ -318,13 +318,13 @@ impl TCPClient<'_> {
     fn fio_open_create(
         &mut self,
         pid: usize,
-        pathname: &[u8],
+        pathname: String,
         flags: u64,
         modes: u64,
         rpc_type: RPCType,
     ) -> Result<(u64, u64), RPCError> {
         let req = RPCOpenReq {
-            pathname: pathname.to_vec(),
+            pathname: pathname,
             flags: flags,
             modes: modes,
         };
@@ -359,9 +359,9 @@ impl TCPClient<'_> {
         }
     }
 
-    pub fn fio_delete(&mut self, pid: usize, pathname: &[u8]) -> Result<(u64, u64), RPCError> {
+    pub fn fio_delete(&mut self, pid: usize, pathname: String) -> Result<(u64, u64), RPCError> {
         let req = RPCDeleteReq {
-            pathname: pathname.to_vec(),
+            pathname: pathname,
         };
         let mut req_data = Vec::new();
         unsafe { encode(&req, &mut req_data) }.unwrap();
@@ -380,12 +380,12 @@ impl TCPClient<'_> {
     pub fn fio_rename(
         &mut self,
         pid: usize,
-        oldname: &[u8],
-        newname: &[u8],
+        oldname: String,
+        newname: String,
     ) -> Result<(u64, u64), RPCError> {
         let req = RPCRenameReq {
-            oldname: oldname.to_vec(),
-            newname: newname.to_vec(),
+            oldname: oldname,
+            newname: newname,
         };
         let mut req_data = Vec::new();
         unsafe { encode(&req, &mut req_data) }.unwrap();
@@ -404,11 +404,11 @@ impl TCPClient<'_> {
     pub fn fio_mkdir(
         &mut self,
         pid: usize,
-        pathname: &[u8],
+        pathname: String,
         modes: u64,
     ) -> Result<(u64, u64), RPCError> {
         let req = RPCMkDirReq {
-            pathname: pathname.to_vec(),
+            pathname: pathname,
             modes: modes,
         };
         let mut req_data = Vec::new();
