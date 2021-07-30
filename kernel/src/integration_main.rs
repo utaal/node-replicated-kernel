@@ -685,7 +685,7 @@ fn xmain() {
     use abomonation::{decode, encode};
     use alloc::borrow::ToOwned;
     use alloc::{vec, vec::Vec};
-    use log::{debug, warn, error};
+    use log::{debug, warn, error, trace};
 
     use smoltcp::socket::{SocketSet, TcpSocket, TcpSocketBuffer};
     use smoltcp::time::Instant;
@@ -825,7 +825,7 @@ fn xmain() {
                         })
                         .unwrap();
                     if data.len() > 0 {
-                        debug!(
+                        trace!(
                             "In Main, received RPC from client ({} bytes): {:?}",
                             data.len(),
                             data
@@ -839,7 +839,7 @@ fn xmain() {
                             } else {
                                 if is_fileio(hdr.msg_type) {
                                     let res_data = handle_fileio(hdr, payload);
-                                    debug!("Response pushed: {:?}", res_data);
+                                    trace!("Response pushed: {:?}", res_data);
                                     response_vec.push(res_data);
                                     server_state = ServerState::AwaitingResponse;
                                 } else {
