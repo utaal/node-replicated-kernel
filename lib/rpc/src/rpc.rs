@@ -1,4 +1,5 @@
 use abomonation::Abomonation;
+use alloc::string::String;
 use alloc::vec::Vec;
 
 #[derive(Debug, Eq, PartialEq, PartialOrd, Clone, Copy)]
@@ -153,7 +154,7 @@ unsafe_abomonate!(RPCMkDirReq: pathname, modes);
 
 #[derive(Debug)]
 pub struct RPCGetInfoReq {
-    pub name: Vec<u8>,
+    pub name: String,
 }
 unsafe_abomonate!(RPCGetInfoReq: name);
 

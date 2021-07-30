@@ -1,5 +1,6 @@
 use abomonation::{decode, encode};
 use alloc::borrow::ToOwned;
+use alloc::string::String;
 use alloc::{vec, vec::Vec};
 use log::{debug, warn};
 
@@ -424,15 +425,17 @@ impl TCPClient<'_> {
         }
     }
 
-    pub fn fio_getinfo(&mut self, pid: usize, name: &[u8]) -> Result<(u64, u64), RPCError> {
+    pub fn fio_getinfo(&mut self, pid: usize, name: String) -> Result<(u64, u64), RPCError> {
         let req = RPCGetInfoReq {
-            name: name.to_vec(),
+            name: name,
         };
         let mut req_data = Vec::new();
         unsafe { encode(&req, &mut req_data) }.unwrap();
         let mut res = self.rpc_call(pid, RPCType::GetInfo, req_data).unwrap();
-        if let Some((_res, mut data)) = unsafe { decode::<FIORPCRes>(&mut res) } {
-            // TODO: check parsed res
+        if let Some((res, mut data)) = unsafe { decode::<FIORPCRes>(&mut res) } {
+            if !res.ret.is_ok() {
+                return res.ret;
+            }
             if let Some((file_info, remaining)) = unsafe { decode::<FileInfo>(&mut data) } {
                 if remaining.len() != 0 {
                     return Err(RPCError::ExtraData);
