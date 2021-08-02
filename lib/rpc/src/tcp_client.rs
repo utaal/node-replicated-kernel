@@ -120,9 +120,16 @@ impl RPCClientAPI for TCPClient<'_> {
         // Send request
         self.msg_send(req_data).unwrap();
 
-        // Receive response and parse header
-        let mut res = self.msg_recv().unwrap();
-        let (res_hdr, res_body) = unsafe { decode::<RPCHeader>(&mut res) }.unwrap();
+        // Receive response header
+        let mut res_data = self.msg_recv(core::mem::size_of::<RPCHeader>()).unwrap();
+        let (res_hdr, extra) = unsafe { decode::<RPCHeader>(&mut res_data) }.unwrap();
+        assert_eq!(extra.len(), 0);
+
+        // Read the rest of the data
+        let mut payload_data = Vec::new();
+        if res_hdr.msg_len > 0 {
+            payload_data = self.msg_recv(res_hdr.msg_len as usize).unwrap();
+        }
 
         // Check request & client IDs, and also length of received data
         if ((res_hdr.client_id != self.client_id) && rpc_id != RPCType::Registration)
@@ -132,9 +139,6 @@ impl RPCClientAPI for TCPClient<'_> {
                 "Mismatched client id ({}, {}) or request id ({}, {})",
                 res_hdr.client_id, self.client_id, res_hdr.req_id, self.req_id
             );
-            return Err(RPCError::MalformedResponse);
-        } else if res_hdr.msg_len != (res_body.len() as u64) {
-            warn!("Did not receive all RPC data!");
             return Err(RPCError::MalformedResponse);
         }
 
@@ -148,14 +152,12 @@ impl RPCClientAPI for TCPClient<'_> {
             return Ok(Vec::new());
         }
 
-        Ok(res_body.to_vec())
+        Ok(payload_data)
     }
 
     /// send data to a remote node
     fn msg_send(&mut self, data: Vec<u8>) -> Result<(), RPCError> {
-        // TODO: check TX capacity, chunk if necessary??
-
-        let mut data_sent = false;
+        let mut data_sent = 0;
         loop {
             match self.iface.poll(&mut self.sockets, Instant::from_millis(0)) {
                 Ok(_) => {}
@@ -164,19 +166,35 @@ impl RPCClientAPI for TCPClient<'_> {
                 }
             }
 
-            let mut socket = self.sockets.get::<TcpSocket>(self.server_handle.unwrap());
-            if socket.can_send() && !data_sent {
-                socket.send_slice(&data[..]).unwrap();
-                trace!("Client sent: {:?}", data);
-                data_sent = true;
-            } else if data_sent {
+            if data_sent == data.len() {
                 return Ok(());
+            } else {
+                let mut socket = self.sockets.get::<TcpSocket>(self.server_handle.unwrap());
+                if socket.can_send() && socket.send_capacity() > 0 && data_sent < data.len() {
+                    let end_index = data_sent + core::cmp::min(data.len(), socket.send_capacity());
+                    debug!("msg_send [{:?}-{:?}]", data_sent, end_index);
+                    if let Ok(bytes_sent) = socket.send_slice(&data[data_sent..end_index]) {
+                        trace!(
+                            "Client sent: [{:?}-{:?}] {:?}/{:?} bytes",
+                            data_sent,
+                            end_index,
+                            end_index,
+                            data.len()
+                        );
+                        data_sent = data_sent + bytes_sent;
+                    } else {
+                        debug!("send_slice failed... trying again?");
+                    }
+                }
             }
         }
     }
 
     /// receive data from a remote node
-    fn msg_recv(&mut self) -> Result<Vec<u8>, RPCError> {
+    fn msg_recv(&mut self, expected_data: usize) -> Result<Vec<u8>, RPCError> {
+        let mut data = vec![0; expected_data];
+        let mut total_data_received = 0;
+
         loop {
             match self.iface.poll(&mut self.sockets, Instant::from_millis(0)) {
                 Ok(_) => {}
@@ -185,19 +203,23 @@ impl RPCClientAPI for TCPClient<'_> {
                 }
             }
 
-            let mut socket = self.sockets.get::<TcpSocket>(self.server_handle.unwrap());
-            if socket.can_recv() {
-                // TODO: check rx capacity
-                let data = socket
-                    .recv(|buffer| {
-                        let recvd_len = buffer.len();
-                        let data = buffer.to_owned();
-                        (recvd_len, data)
-                    })
-                    .unwrap();
-                if data.len() > 0 {
-                    trace!("Client recv: {:?}", data);
-                    return Ok(data);
+            if total_data_received == expected_data {
+                return Ok(data);
+            } else {
+                let mut socket = self.sockets.get::<TcpSocket>(self.server_handle.unwrap());
+                if socket.can_recv() {
+                    if let Ok(bytes_received) =
+                        socket.recv_slice(&mut data[total_data_received..expected_data])
+                    {
+                        total_data_received += bytes_received;
+                        trace!(
+                            "msg_rcv got {:?}/{:?} bytes",
+                            total_data_received,
+                            expected_data
+                        );
+                    } else {
+                        warn!("recv_slice failed... trying again?");
+                    }
                 }
             }
         }
