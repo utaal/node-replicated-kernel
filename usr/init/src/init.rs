@@ -43,9 +43,12 @@ use log::{debug, error, info, Level, Metadata, Record, SetLoggerError};
 mod vmops;
 
 mod f64;
+mod fs;
 #[cfg(feature = "fxmark")]
 mod fxmark;
 mod histogram;
+
+use crate::fs::{run_fio_syscall_proptests, run_fio_syscall_tests};
 
 #[thread_local]
 pub static mut TLS_TEST: [&str; 2] = ["abcd", "efgh"];
@@ -562,7 +565,13 @@ fn fs_test() {
         test_fs_invalid_addresses();
     }
 
+    run_fio_syscall_tests();
     info!("fs_test OK");
+}
+
+fn fs_prop_test() {
+    run_fio_syscall_proptests();
+    info!("fs_prop_test OK");
 }
 
 fn fs_write_test() {
@@ -679,6 +688,9 @@ pub extern "C" fn _start() -> ! {
 
     #[cfg(feature = "fs-write")]
     fs_write_test();
+
+    #[cfg(feature = "test-fs-prop")]
+    fs_prop_test();
 
     #[cfg(feature = "fxmark")]
     fxmark::bench(ncores, open_files, benchmark, write_ratio);
