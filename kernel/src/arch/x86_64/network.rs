@@ -1,5 +1,6 @@
 use alloc::collections::BTreeMap;
 
+use vmxnet3::pci::BarAccess;
 use vmxnet3::smoltcp::DevQueuePhy;
 use vmxnet3::vmx::VMXNet3;
 
@@ -11,17 +12,15 @@ use smoltcp::iface::{EthernetInterface, EthernetInterfaceBuilder, NeighborCache,
 use smoltcp::wire::{EthernetAddress, IpAddress, IpCidr, Ipv4Address};
 
 pub fn init_network<'a>() -> EthernetInterface<'a, DevQueuePhy> {
+    const BUS: u32 = 0x0;
+    const DEV: u32 = 0x10;
+    const FUN: u32 = 0x0;
+    let pci = BarAccess::new(BUS, DEV, FUN);
+
     // TODO(hack): Map potential vmxnet3 bar addresses XD
     // Do this in kernel space (offset of KERNEL_BASE) so the mapping persists
     let kcb = super::kcb::get_kcb();
-    for &bar in &[
-        0x81828000u64,
-        0x81827000u64,
-        0x81005000u64,
-        0x81004000u64,
-        0x81003000u64,
-        0x81002000u64,
-    ] {
+    for &bar in &[pci.bar0 - KERNEL_BASE, pci.bar1 - KERNEL_BASE] {
         kcb.arch
             .init_vspace()
             .map_identity_with_offset(
@@ -34,7 +33,7 @@ pub fn init_network<'a>() -> EthernetInterface<'a, DevQueuePhy> {
     }
 
     // Create the VMX device
-    let mut vmx = VMXNet3::new(1, 1).unwrap();
+    let mut vmx = VMXNet3::new(pci, 1, 1).unwrap();
     vmx.attach_pre().expect("Failed to vmx.attach_pre()");
     vmx.init();
 

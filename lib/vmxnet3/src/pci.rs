@@ -68,16 +68,16 @@ pub(crate) trait BarIO {
 #[derive(Debug, Eq, PartialEq, Clone, Copy)]
 pub struct BarAccess {
     /// Bus, device, function triplet of PCI device
-    pci_addr: (u32, u32, u32),
+    pub pci_addr: (u32, u32, u32),
     /// IO memory address of BAR0
-    bar0: u64,
+    pub bar0: u64,
     /// IO memory address of BAR1
-    bar1: u64,
+    pub bar1: u64,
 }
 
 #[cfg(not(test))]
 impl BarAccess {
-    pub(crate) fn new(bus: u32, dev: u32, fun: u32) -> Self {
+    pub fn new(bus: u32, dev: u32, fun: u32) -> Self {
         unsafe {
             let devline = confread(bus, dev, fun, 0x0);
             assert_eq!(devline, 0x7b015ad, "Sanity check for vmxnet3");
@@ -120,7 +120,7 @@ impl BarIO for BarAccess {
 
 #[cfg(test)]
 impl BarAccess {
-    pub(crate) fn new(bus: u32, dev: u32, fun: u32) -> Self {
+    pub fn new(bus: u32, dev: u32, fun: u32) -> Self {
         BarAccess {
             pci_addr: (bus, dev, fun),
             bar0: 0x0,
