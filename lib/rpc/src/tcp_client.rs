@@ -233,7 +233,7 @@ impl TCPClient<'_> {
         fd: u64,
         data: Vec<u8>,
     ) -> Result<(u64, u64), RPCError> {
-        self.fio_writeat(pid, fd, 0, data)
+        self.fio_writeat(pid, fd, -1, data)
     }
 
     pub fn fio_writeat(
@@ -271,7 +271,7 @@ impl TCPClient<'_> {
         len: u64,
         buff_ptr: &mut [u8],
     ) -> Result<(u64, u64), RPCError> {
-        self.fio_readat(pid, fd, len, 0, buff_ptr)
+        self.fio_readat(pid, fd, len, -1, buff_ptr)
     }
 
     pub fn fio_readat(
