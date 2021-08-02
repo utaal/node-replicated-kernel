@@ -100,6 +100,7 @@ impl RPCClientAPI for TCPClient<'_> {
         rpc_id: RPCType,
         data: Vec<u8>,
     ) -> Result<Vec<u8>, RPCError> {
+
         // Create request header
         let req_hdr = RPCHeader {
             client_id: self.client_id,
@@ -151,7 +152,6 @@ impl RPCClientAPI for TCPClient<'_> {
             debug!("Set client ID to: {}", self.client_id);
             return Ok(Vec::new());
         }
-
         Ok(payload_data)
     }
 
@@ -305,12 +305,11 @@ impl TCPClient<'_> {
                 // write data into user supplied buffer
                 // TODO: more efficient way to write data?
                 } else if bytes_read > 0 {
-                    debug!("Read: {:?}", data);
-                    buff_ptr.copy_from_slice(&data);
+                    debug!("Read buff_ptr[0..{:?}] = {:?}", bytes_read, data);
+                    buff_ptr[..bytes_read as usize].copy_from_slice(&data);
                 }
                 debug!("Read() {:?} {:?}", res, buff_ptr);
             }
-
             return res.ret;
         } else {
             return Err(RPCError::MalformedResponse);
