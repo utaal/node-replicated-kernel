@@ -30,6 +30,8 @@ use core::sync::atomic::{AtomicBool, Ordering};
 #[cfg(feature = "exokernel")]
 use smoltcp::wire::IpAddress;
 
+
+
 use crate::cnrfs::{MlnrKernelNode, Modify};
 use crate::kcb::{BootloaderArguments, Kcb};
 use crate::memory::{mcache, Frame, GlobalMemory, BASE_PAGE_SIZE};
@@ -70,6 +72,13 @@ pub mod syscall;
 pub mod timer;
 pub mod tlb;
 pub mod vspace;
+
+#[cfg(all(
+    feature = "integration-test",
+    feature = "test-controller",
+    target_arch = "x86_64"
+    ))]
+pub mod controller;
 
 mod isr;
 
