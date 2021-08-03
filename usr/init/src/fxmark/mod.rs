@@ -128,7 +128,7 @@ where
     }
 
     fn fxmark_bencher(&self, cores: usize, benchmark: &str, write_ratio: usize, open_files: usize) {
-        let bench_duration_secs = if cfg!(feature = "smoke") { 1 } else { 10 };
+        let bench_duration_secs = 1; //if cfg!(feature = "smoke") { 1 } else { 10 };
         let core_id = Environment::scheduler().core_id;
         let iops = self.bench.run(
             &POOR_MANS_BARRIER,
@@ -236,6 +236,7 @@ pub fn bench(ncores: Option<usize>, open_files: usize, benchmark: String, write_
         }
     }
 
+    /*
     if benchmark == "drbl" {
         let microbench = Arc::new(MicroBench::<DRBL>::new(
             maximum,
@@ -301,6 +302,7 @@ pub fn bench(ncores: Option<usize>, open_files: usize, benchmark: String, write_
         microbench.bench.init(cores.clone(), open_files);
         start::<MWRM>(maximum, microbench);
     }
+    */
 
     if benchmark == "mix" {
         let microbench = Arc::new(MicroBench::<MIX>::new(

@@ -76,7 +76,7 @@ impl Bench for MIX {
     ) -> Vec<usize> {
         use vibrio::io::*;
         use vibrio::syscalls::*;
-        let mut iops_per_second = Vec::with_capacity(duration as usize);
+        let mut results = Vec::with_capacity(duration as usize);
 
         let file_num = (core % self.max_open_files) % *self.open_files.borrow();
         let fd = self.fds.borrow()[file_num];
@@ -93,51 +93,44 @@ impl Bench for MIX {
             core::sync::atomic::spin_loop_hint();
         }
 
-        let mut iops = 0;
-        let mut iterations = 0;
+
         let mut random_num: u16 = 0;
+        let start = rawtime::Instant::now();
+        let total_operations = 100;
+        let mut operations = 0;
+        while operations < total_operations {
+                unsafe { rdrand16(&mut random_num) };
+                let rand = random_num as usize % total_pages;
+                let offset = rand * 4096;
 
-        while iterations <= duration {
-            let start = rawtime::Instant::now();
-            while start.elapsed().as_secs() < 1 {
-                for i in 0..64 {
-                    unsafe { rdrand16(&mut random_num) };
-                    let rand = random_num as usize % total_pages;
-                    let offset = rand * 4096;
-
-                    if random_num as usize % 100 < write_ratio {
-                        if vibrio::syscalls::Fs::write_at(
-                            fd,
-                            page.as_ptr() as u64,
-                            PAGE_SIZE,
-                            offset as i64,
-                        )
-                        .expect("FileWriteAt syscall failed")
-                            != PAGE_SIZE
-                        {
-                            panic!("MIX: write_at() failed");
-                        }
-                    } else {
-                        if vibrio::syscalls::Fs::read_at(
-                            fd,
-                            page.as_ptr() as u64,
-                            PAGE_SIZE,
-                            offset as i64,
-                        )
-                        .expect("FileReadAt syscall failed")
-                            != PAGE_SIZE
-                        {
-                            panic!("MIX: read_at() failed");
-                        }
+                if random_num as usize % 100 < write_ratio {
+                    if vibrio::syscalls::Fs::write_at(
+                        fd,
+                        page.as_ptr() as u64,
+                        PAGE_SIZE,
+                        offset as i64,
+                    )
+                    .expect("FileWriteAt syscall failed")
+                        != PAGE_SIZE
+                    {
+                        panic!("MIX: write_at() failed");
                     }
-                    iops += 1;
+                } else {
+                    if vibrio::syscalls::Fs::read_at(
+                        fd,
+                        page.as_ptr() as u64,
+                        PAGE_SIZE,
+                        offset as i64,
+                    )
+                    .expect("FileReadAt syscall failed")
+                        != PAGE_SIZE
+                    {
+                        panic!("MIX: read_at() failed");
+                    }
                 }
+                operations += 1;
             }
-
-            iops_per_second.push(iops);
-            iterations += 1;
-            iops = 0;
-        }
+        let end = rawtime::Instant::now();
 
         POOR_MANS_BARRIER.fetch_add(1, Ordering::Release);
         let num_cores = *self.cores.borrow();
@@ -147,14 +140,16 @@ impl Bench for MIX {
         }
 
         if core == 0 {
-            let start = rawtime::Instant::now();
-            while start.elapsed().as_secs() < 1 {}
             for i in 0..*self.open_files.borrow() {
                 let fd = self.fds.borrow()[i];
                 vibrio::syscalls::Fs::close(fd).expect("FileClose syscall failed");
             }
         }
-        iops_per_second.clone()
+        info!("MIX RESULTS: ops={:?} nanos={:?}", total_operations, end.as_nanos() - start.as_nanos());
+        for i in 0..duration {
+            results.push(0 as usize);
+        }
+        results.clone()
     }
 }
 
