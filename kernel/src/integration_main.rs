@@ -649,7 +649,6 @@ fn xmain() {
 
     use crate::memory::vspace::MapAction;
     use crate::memory::PAddr;
-    use crate::remote_syscall::handle_fileio;
 
     let vmx = {
         let kcb = crate::kcb::get_kcb();
