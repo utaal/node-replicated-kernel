@@ -141,7 +141,7 @@ test-replica-advance = ["integration-test"]
 # test-vmxnet-smoke: Test vmxnet NIC driver
 test-vmxnet-smoke = ["integration-test"]
 # test-vmxnet-smoltcp: Test vmxnet NIC driver with a network stack
-test-vmxnet-smoltcp = ["integration-test", "smoltcp"]
+test-vmxnet-smoltcp = ["integration-test"]
 # test-gdb: Test gdbstub integration for the kernel
 test-gdb = ["integration-test", "bsp-only", "gdb"]
 # test-controller: Test RPC-based controller
