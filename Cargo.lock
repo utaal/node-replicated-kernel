@@ -915,6 +915,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c75de51135344a4f8ed3cfe2720dc27736f7711989703a0b43aadf3753c55577"
 
 [[package]]
+name = "managed"
+version = "0.8.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0ca88d725a0a943b096803bd34e73a4437208b6077654cc4ecb2947a5f91618d"
+
+[[package]]
 name = "matches"
 version = "0.1.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1001,7 +1007,6 @@ dependencies = [
 name = "nrk"
 version = "0.0.4"
 dependencies = [
- "addr2line",
  "abomonation",
  "addr2line",
  "apic",
@@ -1611,7 +1616,7 @@ dependencies = [
  "bitflags",
  "byteorder",
  "log",
- "managed",
+ "managed 0.7.2",
 ]
 
 [[package]]

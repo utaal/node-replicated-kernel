@@ -1253,7 +1253,7 @@ fn s03_controller() {
 /// network stack.
 #[cfg(not(feature = "baremetal"))]
 #[test]
-#[ignore = "flaky make networking stable first"]
+//#[ignore = "flaky make networking stable first"]
 fn s03_vmxnet3_smoltcp() {
     fn spawn_socat(port: u16) -> Result<rexpect::session::PtySession> {
         spawn(

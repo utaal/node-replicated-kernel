@@ -66,16 +66,23 @@ impl<'a> Device<'a> for DevQueuePhy {
         if numdeq > 0 {
             // Get a packet, for now just one
             let packet = self.device.rxq[0].dequeue().expect("numdeq was >0");
+            assert!(self.device.rxq[0].flush().is_ok());
 
             // Enqueue another buffer for future receives
             // TODO: maybe we need to enqueue more than one?
 
             // info!("RX: new rx buffer chain");
+            //let mut bufs = IOBufChain::new(0, 2).expect("Can't make chain?");
+            //bufs.append(self.pool_rx.get_buf().expect("Can't get buffer?"));
+            //bufs.append(self.pool_rx.get_buf().expect("Can't get buffer?"));
+            let layout = Layout::from_size_align(MAX_PACKET_SZ, 128).expect("Correct Layout");
             let mut bufs = IOBufChain::new(0, 2).expect("Can't make chain?");
-            bufs.append(self.pool_rx.get_buf().expect("Can't get buffer?"));
-            bufs.append(self.pool_rx.get_buf().expect("Can't get buffer?"));
-
-            assert!(self.device.rxq[0].enqueue(bufs).is_ok());
+            let seg0 = IOBuf::new(layout).expect("Can't make packet?");
+            let seg1 = IOBuf::new(layout).expect("Can't make packet?");
+            bufs.append(seg0);
+            bufs.append(seg1);
+            let enq = self.device.rxq[0].enqueue(bufs);
+            assert!(enq.is_ok());
 
             // construct the RX token
             let rx_token = RxPacket::new(packet, &mut self.pool_rx);
@@ -84,14 +91,17 @@ impl<'a> Device<'a> for DevQueuePhy {
             // TODO: make sure we can actually send something!
 
             let numdeq = self.device.txq[0].can_dequeue(false);
-
             let iobuf = if numdeq > 0 {
                 // info!("TX: reusing buffer chain");
                 self.device.txq[0].dequeue().expect("Couldn't dequeue?")
             } else {
                 // info!("TX: new buffer chain");
-                let mut iobuf = IOBufChain::new(0, 1).expect("Can't create chain?");
-                iobuf.append(self.pool_tx.get_buf().expect("Can't get buffer from pool"));
+                let mut iobuf = IOBufChain::new(0, 2).expect("Can't create chain?");
+                let seg0 = IOBuf::new(layout).expect("Can't make packet?");
+                let seg1 = IOBuf::new(layout).expect("Can't make packet?");
+
+                iobuf.append(seg0);
+                iobuf.append(seg1);
                 iobuf
             };
 
@@ -104,6 +114,7 @@ impl<'a> Device<'a> for DevQueuePhy {
             Some((rx_token, tx_token))
         } else {
             // info!("Nothing to receive!");
+            assert!(self.device.rxq[0].flush().is_ok());
             None
         }
     }

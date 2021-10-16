@@ -226,7 +226,7 @@ impl vmxnet3_txcomp_ring {
     }
 
     pub(crate) fn vxcr_ndesc(&self) -> usize {
-        self.vxcr.len()
+        self.vxcr.len() - 1
     }
 }
 
@@ -624,6 +624,7 @@ impl DevQueue for RxQueue {
     fn enqueue(&mut self, chain: IOBufChain) -> Result<(), IOBufChain> {
         if (self.capacity() - 1) - self.len() < chain.segments.len() {
             // We don't bother trying to enqueue a partial packet
+            log::info!("Rx queue {} is full", self.vxrxq_id);
             return Err(chain);
         }
 
@@ -686,6 +687,7 @@ impl DevQueue for RxQueue {
             0xA00 + (self.vxrxq_id * 8) as u64
         };
 
+        //log::info!("RX:flush! {}", self.pidx_head0);
         self.pci.write_bar0(r, self.pidx_head0 as u32);
         Ok(1)
     }
@@ -720,6 +722,7 @@ impl DevQueue for RxQueue {
 
             self.pidx_tail0 += 1;
             if self.pidx_tail0 == rxc.vxcr_ndesc() {
+                log::error!("rxq:dequeue: zero-length packet at end of ring");
                 self.pidx_tail0 = 0;
                 rxc.vxcr_gen ^= 1;
             }
@@ -818,7 +821,14 @@ impl DevQueue for RxQueue {
 
             nfrags += 1;
             self.pidx_tail0 += 1;
+            log::info!(
+                "self.pidx_tail0 = {} rxc.vxcr_ndesc = {}",
+                self.pidx_tail0,
+                rxc.vxcr_ndesc()
+            );
+
             if self.pidx_tail0 == rxc.vxcr_ndesc() {
+                log::error!("rxq:dequeue: packet at end of ring");
                 self.pidx_tail0 = 0;
                 rxc.vxcr_gen ^= 1;
             }

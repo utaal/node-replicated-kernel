@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: BSD-2-Clause
 
 #![allow(unused)]
-use log::error;
+use log::{error, trace};
 use x86::io;
 
 pub use driverkit::iomem::DmaObject;
@@ -46,14 +46,16 @@ pub(crate) unsafe fn confwrite(bus: u32, dev: u32, fun: u32, reg: u32, value: u3
 
 pub(crate) unsafe fn busread(bar_base: u64, offset: u64) -> u32 {
     let v = *((bar_base + offset) as *mut u32);
-    error!("busread ({:#x} + {:#x}) val = {:#x}", bar_base, offset, v);
+    trace!("busread ({:#x} + {:#x}) val = {:#x}", bar_base, offset, v);
     v
 }
 
 pub(crate) unsafe fn buswrite(bar_base: u64, offset: u64, value: u32) {
-    error!(
+    trace!(
         "buswrite ({:#x} + {:#x}) = value({:#x})",
-        bar_base, offset, value
+        bar_base,
+        offset,
+        value
     );
     *((bar_base + offset) as *mut u32) = value;
 }
@@ -86,8 +88,8 @@ impl BarAccess {
             let bar1 = confread(bus, dev, fun, 0x14);
             //let bar_msix = pci::confread(BUS, DEV, FUN, 0x7);
 
-            log::debug!("BAR0 at: {:#x}", bar0);
-            log::debug!("BAR1 at: {:#x}", bar1);
+            log::error!("BAR0 at: {:#x}", bar0);
+            log::error!("BAR1 at: {:#x}", bar1);
             //debug!("MSI-X at: {:#x}", bar_msi);
 
             BarAccess {
