@@ -106,8 +106,7 @@ pub fn event_loop(reason: KCoreStopReason) -> Result<(), KError> {
     loop {
         gdb_stm = match gdb_stm {
             GdbStubStateMachine::Idle(mut gdb_stm_inner) => {
-                //trace!("GdbStubStateMachine::Idle");
-
+                trace!("GdbStubStateMachine::Idle");
                 // This means we expect stuff on the serial line (from GDB)
                 // Let's read and react to it:
                 let conn = gdb_stm_inner.borrow_conn();
@@ -127,7 +126,10 @@ pub fn event_loop(reason: KCoreStopReason) -> Result<(), KError> {
                 }
             }
             GdbStubStateMachine::CtrlCInterrupt(gdb_stm_inner) => {
-                match gdb_stm_inner.interrupt_handled(target, Some(ThreadStopReason::DoneStep)) {
+                trace!("GdbStubStateMachine::CtrlCInterrupt");
+                let reason = stop_reason.take();
+                assert_eq!(reason, Some(ThreadStopReason::Signal(Signal::SIGINT)));
+                match gdb_stm_inner.interrupt_handled(target, reason) {
                     Ok(gdb) => gdb,
                     Err(e) => {
                         error!("gdbstub error {:?}", e);
@@ -136,11 +138,11 @@ pub fn event_loop(reason: KCoreStopReason) -> Result<(), KError> {
                 }
             }
             GdbStubStateMachine::Disconnected(_gdb_stm_inner) => {
-                error!("GdbStubStateMachine::Disconnected byebye");
+                error!("GdbStubStateMachine::Disconnected");
                 break;
             }
             GdbStubStateMachine::Running(mut gdb_stm_inner) => {
-                //trace!("GdbStubStateMachine::DeferredStopReason");
+                trace!("GdbStubStateMachine::Running");
 
                 // If we're here we were running but have stopped now (either
                 // because we hit Ctrl+c in gdb and hence got a serial interrupt
@@ -253,7 +255,7 @@ impl KernelDebugger {
     // Also does some additional stuff like re-enabling the breakpoints.
     fn determine_stop_reason(&mut self, reason: KCoreStopReason) -> Option<ThreadStopReason<u64>> {
         match reason {
-            KCoreStopReason::ConnectionInterrupt => Some(ThreadStopReason::Signal(Signal::SIGTRAP)),
+            KCoreStopReason::ConnectionInterrupt => Some(ThreadStopReason::Signal(Signal::SIGINT)),
             KCoreStopReason::BreakpointInterrupt => {
                 unimplemented!("Breakpoint interrupt not implemented");
                 //Some(ThreadStopReason::SwBreak(NonZeroUsize::new(1).unwrap()))
